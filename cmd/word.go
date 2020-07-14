@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	MODE_UPPER = iota + 1
-	MODE_LOWER
-	MODE_UNDERSCORE_TO_UPPER_CAMELCASE
-	MODE_UNDERSCORE_TO_LOWER_CAMELCASE
-	MODE_CAMELCASE_TO_UNDERSORE
+	ModeUpper = iota + 1
+	ModeLower
+	ModeUnderscoreToUpperCamelcase
+	ModeUnderscoreToLowerCamelcase
+	ModeCamelcaseToUndersore
 )
 
 var str string
@@ -40,15 +40,15 @@ var wordCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var content string
 		switch mode {
-		case MODE_UPPER:
+		case ModeUpper:
 			content = word.ToUpper(str)
-		case MODE_LOWER:
+		case ModeLower:
 			content = word.ToLower(str)
-		case MODE_UNDERSCORE_TO_UPPER_CAMELCASE:
+		case ModeUnderscoreToUpperCamelcase:
 			content = word.UnderscoreToUpperCamelCase(str)
-		case MODE_UNDERSCORE_TO_LOWER_CAMELCASE:
+		case ModeUnderscoreToLowerCamelcase:
 			content = word.UnderscoreToLowerCamelCase(str)
-		case MODE_CAMELCASE_TO_UNDERSORE:
+		case ModeCamelcaseToUndersore:
 			content = word.CamelCaseToUnderscore(str)
 		default:
 			log.Fatalln("暂不支持该模式转换，执行help word查看帮助文档")
