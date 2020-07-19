@@ -1,15 +1,19 @@
 package sql2struct
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/yuchanns/go-tour/internal/word"
+	"go/format"
 	"html/template"
 	"os"
+	"strings"
 )
 
-const StructTpl = `type {{.TableName | ToCamelCase}} struct {
-{{range .Columns}}{{$length := len .Comment}}    {{if gt $length 0}}// {{.Comment}}{{else}}// {{.Name}} {{end}}
-    {{$typeLen := len .Type}}{{if gt $typeLen 0}}{{.Name | ToCamelCase}} {{.Type}}    {{.Tag}}{{else}}{{.Name}}{{end}}
+const StructTpl = `
+type {{.TableName | ToCamelCase}} struct {
+{{range .Columns}}{{$length := len .Comment}}{{if gt $length 0}}// {{.Comment}}{{else}}// {{.Name}}{{end}}
+    {{$typeLen := len .Type}}{{if gt $typeLen 0}}{{.Name | ToCamelCase}}{{.Type}}{{.Tag}}{{else}}{{.Name}}{{end}}
 {{end}}}
 
 func (model {{.TableName | ToCamelCase}}) TableName() string {
@@ -42,8 +46,8 @@ func (t *StructTemplate) AssemblyColumns(tbColumns []*TableColumn) []*StructColu
 	for _, column := range tbColumns {
 		tplColumns = append(tplColumns, &StructColumn{
 			Name:    column.ColumnName,
-			Type:    column.ColumnType,
-			Tag:     fmt.Sprintf("`json:%s`", column.ColumnName),
+			Type:    DBTypeToStructType[column.DataType],
+			Tag:     fmt.Sprintf("`json:%q`", column.ColumnName),
 			Comment: column.ColumnComment,
 		})
 	}
@@ -60,6 +64,17 @@ func (t *StructTemplate) Generate(tableName string, tplColumns []*StructColumn) 
 		TableName: tableName,
 		Columns:   tplColumns,
 	}
+	source := new(bytes.Buffer)
+	if err := tpl.Execute(source, tplDB); err != nil {
+		return err
+	}
 
-	return tpl.Execute(os.Stdout, tplDB)
+	content, err := format.Source(source.Bytes())
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprint(os.Stdout, strings.Replace(string(content), "&#34;", "\"", -1))
+
+	return err
 }
